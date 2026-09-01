@@ -1,5 +1,5 @@
-import path from "node:path";
 import type { BunRequest } from "bun";
+import { randomBytes } from "node:crypto";
 import { getBearerToken, validateJWT } from "../auth";
 import { respondWithJSON } from "./json";
 import { getVideo, updateVideo } from "../db/videos";
@@ -44,7 +44,7 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   }
 
   const extension = mediaTypeToExt(mediaType);
-  const fileName = `${videoId}${extension}`;
+  const fileName = `${randomBytes(32).toString("base64url")}${extension}`;
   const assetPath = getAssetDiskPath(cfg, fileName);
 
   await Bun.write(assetPath, file);
