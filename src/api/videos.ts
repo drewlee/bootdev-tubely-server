@@ -1,12 +1,15 @@
 import type { BunRequest } from "bun";
+import { rmSync } from "node:fs";
+import path from "node:path";
 import { respondWithJSON } from "./json";
 import { type ApiConfig } from "../config";
 import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
 import { getBearerToken, validateJWT } from "../auth";
-import { getVideo } from "../db/videos";
+import { getVideo, updateVideo } from "../db/videos";
+import { uploadVideoToS3 } from "../s3";
 
 export async function handlerUploadVideo(cfg: ApiConfig, req: BunRequest) {
-  const MAX_UPLOAD_SIZE = 10 << 30;
+  const MAX_UPLOAD_SIZE = 1 << 30;
 
   const { videoId } = req.params as { videoId?: string };
   if (!videoId) {
@@ -36,5 +39,21 @@ export async function handlerUploadVideo(cfg: ApiConfig, req: BunRequest) {
     throw new BadRequestError("File exceeds 1 GB size limit");
   }
 
-  return respondWithJSON(200, null);
+  if (file.type !== "video/mp4") {
+    throw new BadRequestError("Invalid media type");
+  }
+
+  const tempFilePath = path.join("/tmp", `${videoId}.mp4`);
+  await Bun.write(tempFilePath, file);
+
+  const key = `${videoId}.mp4`;
+  await uploadVideoToS3(cfg, key, tempFilePath, "video/mp4");
+
+  const videoURL = `https://${cfg.s3Bucket}.s3.${cfg.s3Region}.amazonaws.com/${key}`;
+  video.videoURL = videoURL;
+  updateVideo(cfg.db, video);
+
+  rmSync(tempFilePath, { force: true });
+
+  return respondWithJSON(200, video);
 }

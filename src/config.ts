@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import { s3, S3Client } from "bun";
+import { s3, type S3Client } from "bun";
 import { newDatabase } from "./db/db";
 
 export type ApiConfig = {
