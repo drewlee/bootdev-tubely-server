@@ -5,8 +5,8 @@ import { respondWithJSON } from "./json";
 import { type ApiConfig } from "../config";
 import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
 import { getBearerToken, validateJWT } from "../auth";
-import { type Video, getVideo, updateVideo } from "../db/videos";
-import { uploadVideoToS3, generatePresignedURL } from "../s3";
+import { getVideo, updateVideo } from "../db/videos";
+import { uploadVideoToS3 } from "../s3";
 
 export async function getVideoAspectRatio(filePath: string): Promise<string> {
   const proc = Bun.spawn([
@@ -79,16 +79,6 @@ export async function processVideoForFastStart(inputFilePath: string) {
   return outputFilePath;
 }
 
-export function dbVideoToSignedVideo(cfg: ApiConfig, video: Video) {
-  if (!video.videoURL) {
-    return video;
-  }
-
-  video.videoURL = generatePresignedURL(cfg, video.videoURL, 5 * 60);
-
-  return video;
-}
-
 export async function handlerUploadVideo(cfg: ApiConfig, req: BunRequest) {
   const MAX_UPLOAD_SIZE = 1 << 30;
 
@@ -133,12 +123,11 @@ export async function handlerUploadVideo(cfg: ApiConfig, req: BunRequest) {
 
   await uploadVideoToS3(cfg, key, processed, "video/mp4");
 
-  video.videoURL = key;
+  video.videoURL = `${cfg.s3CfDistribution}/${key}`;
   updateVideo(cfg.db, video);
 
   rmSync(tempFilePath, { force: true });
   rmSync(processed, { force: true });
 
-  const signedVideo = dbVideoToSignedVideo(cfg, video);
-  return respondWithJSON(200, signedVideo);
+  return respondWithJSON(200, video);
 }
