@@ -1,10 +1,9 @@
-# learn-file-storage-s3-typescript-starter (Tubely)
+# Tubely Web Server
 
-This repo contains the starter code for the Tubely application - the #1 tool for engagement bait - for the "Learn File Servers and CDNs with S3 and CloudFront" [course](https://www.boot.dev/courses/learn-file-servers-s3-cloudfront-typescript) on [boot.dev](https://www.boot.dev)
+Web server for a fictitious video hosting platform akin to YouTube.com. Completed as
+part of the [Boot.dev](https://boot.dev) learning platform.
 
 ## Quickstart
-
-*This is to be used as a *reference\* in case you need it, you should follow the instructions in the course rather than trying to do everything here.
 
 ## 1. Install dependencies
 
@@ -63,3 +62,7 @@ bun run src/index.ts
 - You should see a new database file `tubely.db` created in the root directory.
 - You should see a new `assets` directory created in the root directory, this is where the images will be stored.
 - You should see a link in your console to open the local web page.
+
+## Profile
+
+https://www.boot.dev/u/merrytank80
